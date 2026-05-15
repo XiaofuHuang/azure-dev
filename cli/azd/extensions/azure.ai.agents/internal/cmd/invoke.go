@@ -138,7 +138,6 @@ session automatically. Pass --new-session to force a reset.`,
 					"provide either a message argument or --input-file, not both",
 				)
 			}
-
 			if flags.inputFile == "" && flags.message == "" {
 				return exterrors.Validation(
 					exterrors.CodeInvalidParameter,

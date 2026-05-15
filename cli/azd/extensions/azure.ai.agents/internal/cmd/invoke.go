@@ -39,8 +39,6 @@ type invokeFlags struct {
 	newConversation bool
 	protocol        string
 	agentEndpoint   string
-	inspector       bool
-	inspectorPort   int
 }
 
 type InvokeAction struct {
@@ -89,9 +87,6 @@ session automatically. Pass --new-session to force a reset.`,
 
   # Invoke locally (agent must be running via 'azd ai agent run')
   azd ai agent invoke --local "Hello!"
-
-  # Launch the Agent Inspector UI in a browser, pointed at the local agent
-  azd ai agent invoke --local --inspector
 
   # Start a new session (discard conversation history)
   azd ai agent invoke --new-session "Hello!"
@@ -144,11 +139,7 @@ session automatically. Pass --new-session to force a reset.`,
 				)
 			}
 
-			if flags.inspector {
-				if err := validateInspectorFlags(flags); err != nil {
-					return err
-				}
-			} else if flags.inputFile == "" && flags.message == "" {
+			if flags.inputFile == "" && flags.message == "" {
 				return exterrors.Validation(
 					exterrors.CodeInvalidParameter,
 					"a message argument or --input-file is required",
@@ -195,39 +186,8 @@ session automatically. Pass --new-session to force a reset.`,
 		"Full endpoint URL of a deployed agent (run 'azd ai agent show' to see it). "+
 			"Invokes without requiring an azd project; protocol is derived from the URL.",
 	)
-	cmd.Flags().BoolVar(
-		&flags.inspector,
-		"inspector",
-		false,
-		"Launch the Agent Inspector UI in a browser instead of streaming the response to the terminal. "+
-			"Only supported with --local in this preview.",
-	)
-	cmd.Flags().IntVar(
-		&flags.inspectorPort,
-		"inspector-port",
-		DefaultInspectorPort,
-		fmt.Sprintf("Port the Agent Inspector UI listens on (default: %d)", DefaultInspectorPort),
-	)
 
 	return cmd
-}
-
-func validateInspectorFlags(flags *invokeFlags) error {
-	if !flags.local {
-		return exterrors.Validation(
-			exterrors.CodeInvalidParameter,
-			"--inspector currently only supports --local",
-			"add --local to launch the inspector against a local agent (start it with: azd ai agent run)",
-		)
-	}
-	if flags.inputFile != "" || flags.message != "" {
-		return exterrors.Validation(
-			exterrors.CodeInvalidParameter,
-			"--inspector cannot be combined with a message or --input-file",
-			"the inspector UI provides its own input; remove the message argument and --input-file",
-		)
-	}
-	return nil
 }
 
 // validateAgentEndpointFlags rejects flags that have no effect (or conflict) when --agent-endpoint
@@ -263,10 +223,6 @@ func validateAgentEndpointFlags(cmd *cobra.Command, flags *invokeFlags) error {
 }
 
 func (a *InvokeAction) Run(ctx context.Context) error {
-	if a.flags.inspector {
-		return a.runInspector(ctx)
-	}
-
 	protocol, err := a.resolveProtocol(ctx)
 	if err != nil {
 		return err

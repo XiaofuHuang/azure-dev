@@ -1,0 +1,17 @@
+import: ../../.vscode/cspell.yaml
+words:
+  # Project terms
+  - agentserver
+  - apim
+  - azureaiinspector
+  - codicon
+  - exterrors
+  - fmtcheck
+  - gosec
+  - JSONRPC
+  - katex
+  - lipgloss
+  - lll
+  - rpcs
+  - SSEs
+  - websockets
